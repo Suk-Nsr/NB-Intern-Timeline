@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBSPACE FlatSat Labs - Timeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Thai', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f2937',
+                            card: '#151e2e',
+                            accent: '#0ea5e9' // Sky blue
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
+            background-attachment: fixed;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .timeline-btn {
+            transition: all 0.2s ease;
+        }
+        .timeline-btn.active {
+            background: linear-gradient(135deg, rgba(14,165,233,0.2) 0%, rgba(14,165,233,0) 100%);
+            border-left-color: #0ea5e9;
+            color: #38bdf8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-white">
+
+    <header class="w-full bg-space-800/80 backdrop-blur-md border-b border-gray-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                        <i class="fa-solid fa-satellite text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">NBSPACE FlatSat Labs</h1>
+                        <p class="text-xs md:text-sm text-gray-400">Project Evolution Timeline (25 พ.ค. - 24 ก.ค.)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-6">
+        
+        <!-- Sidebar Navigation (Tabs) -->
+        <div class="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
+            <div class="bg-space-card rounded-2xl border border-gray-800 shadow-xl overflow-hidden sticky top-28">
+                <div class="px-5 py-4 border-b border-gray-800 bg-space-800">
+                    <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-timeline text-sky-500"></i> Project Timeline
+                    </h2>
+                </div>
+                <!-- Navigation Container -->
+                <nav id="tab-nav" class="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto max-h-[60vh] scroll-smooth">
+                    <!-- Tabs will be injected here by JS -->
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tab Content Area -->
+        <div class="w-full md:w-2/3 lg:w-3/4">
+            <div class="bg-space-card rounded-2xl border border-gray-800 shadow-2xl overflow-hidden min-h-[500px] relative">
+                <!-- Decorative background elements -->
+                <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div id="content-container" class="relative z-10 p-6 md:p-8">
+                    <!-- Content will be injected here by JS -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Data Structure for the 9 Weeks
+        const timelineData = [
+            {
+                week: 1,
+                date: "25 พ.ค. - 29 พ.ค.",
+                title: "Project Initiation & Problem Analysis",
+                icon: "fa-magnifying-glass",
+                tasks: [
+                    "<b>ทำความเข้าใจระบบ:</b> ศึกษาวิธีการใช้งาน FlatSat และวิเคราะห์ข้อบกพร่องของชุดการทดลองเดิม",
+                    "<b>วิเคราะห์ปัญหา (Pain Points):</b> พบว่าแล็บเดิมมีลักษณะเพียง 'อ่านค่าเซนเซอร์แล้วจด' และแจกโค้ดสำเร็จรูป (Ready-to-use) ทำให้นักศึกษาไม่ได้ฝึกคิดวิเคราะห์",
+                    "<b>เสนอแนวทางแก้ไข (Solution):</b> เปลี่ยนมาใช้แนวคิด <b>'Skeleton Code'</b> (โค้ดเจาะรู) เพื่อบังคับให้ผู้เรียนต้องเปิดอ่าน Data Sheet และทำความเข้าใจ Library ด้วยตัวเอง"
+                ],
+                highlight: "กำหนดมาตรฐานสากล: คอมเมนต์และอธิบายการทำงานในโค้ดทั้งหมดต้องเป็นภาษาอังกฤษ"
+            },
+            {
+                week: 2,
+                date: "1 มิ.ย. - 5 มิ.ย.",
+                title: "Brainstorming & Prototype Development",
+                icon: "fa-lightbulb",
+                tasks: [
+                    "<b>ออกแบบโครงสร้างแล็บ:</b> วางโครงร่างหลักสูตรตั้งต้นไว้ 8 แล็บ ครอบคลุมตั้งแต่ OBC, การจัดการไฟล์ (SPI Flash/SD Card), พลังงาน (Safe Mode), การสื่อสาร (KISS Protocol) และภารกิจจำลอง",
+                    "<b>สร้าง Repository:</b> ก่อตั้งโปรเจกต์ <code>Flatsat-Labs</code> บน GitHub (เริ่มวันที่ 4 มิ.ย.)",
+                    "<b>พัฒนาโค้ดต้นแบบ (Prototype):</b> พัฒนาโค้ดและเฉลยสำหรับ Lab 1 (OBC Init), Lab 2 (Data Storage) และ Lab 3 (EPS)",
+                    "<b>ปรับโครงสร้างโค้ด:</b> ปรับปรุงเป็นรูปแบบ Modular Programming เพื่อความเป็นระเบียบและง่ายต่อการเรียนรู้"
+                ],
+                highlight: "กำเนิดโครงร่างหลักสูตร FlatSat ชุดใหม่ที่เน้น Systems Engineering"
+            },
+            {
+                week: 3,
+                date: "8 มิ.ย. - 12 มิ.ย.",
+                title: "Automation & Core Features",
+                icon: "fa-code-branch",
+                tasks: [
+                    "<b>สร้างระบบ CI/CD (Automation):</b> พัฒนา GitHub Actions Workflow เพื่อแพ็กไฟล์ ZIP สำหรับแจกจ่ายให้นักศึกษาดาวน์โหลดอัตโนมัติ (Release Files)",
+                    "<b>ปรับปรุงเสถียรภาพโค้ด:</b> แก้ไขบั๊ก, เพิ่ม Testbench ตรวจสอบความถูกต้อง, ปรับแก้โค้ดควบคุมพลังงาน และเปลี่ยนมาใช้เช็ค Serial Input แทนคำสั่ง delay()",
+                    "<b>พัฒนาระบบสื่อสาร:</b> เริ่มพัฒนาโค้ดสำหรับ Lab 4 (RF Communication & KISS Protocol) พร้อมทั้งเขียน Testbench ฝั่งดาวเทียม"
+                ],
+                highlight: "นำทักษะ Software Engineering มาประยุกต์ใช้สร้างระบบแจกจ่ายไฟล์อัตโนมัติ"
+            },
+            {
+                week: 4,
+                date: "15 มิ.ย. - 19 มิ.ย.",
+                title: "The Great Restructure",
+                icon: "fa-layer-group",
+                tasks: [
+                    "<b>รับมือความท้าทาย:</b> ได้รับคำสั่งด่วนให้ยุบเนื้อหาหลักสูตรลงให้เหลือเพียง 4-5 แล็บ",
+                    "<b>แก้ปัญหาแบบ Agility:</b> ตัดสินใจแยก Repository ออกเป็น 2 ชุดเพื่อคงเนื้อหาสำคัญไว้ ได้แก่ <code>Full_Labs</code> (7 แล็บเต็ม) และ <code>Final_Labs</code> (ยุบเหลือ 5 แล็บ)",
+                    "<b>การควบรวมเนื้อหา (Final_Labs):</b> นำ Lab 1+4 เดิมมารวมกันเป็น Lab 1 ใหม่ และนำ Lab 2+3 เดิมมารวมกันเป็น Lab 2 ใหม่ เพื่อความกระชับแต่ความรู้ยังครบถ้วน"
+                ],
+                highlight: "การปรับตัวแก้ไขแผนงานอย่างรวดเร็ว (Agility) โดยไม่ทิ้งสาระสำคัญของหลักสูตร"
+            },
+            {
+                week: 5,
+                date: "22 มิ.ย. - 26 มิ.ย.",
+                title: "The Final Mission & System Integration",
+                icon: "fa-rocket",
+                tasks: [
+                    "<b>จัดทำเอกสาร Lab 7:</b> ร่างข้อกำหนดการทำงาน (Functional Requirements) สำหรับภารกิจจำลอง 1 รอบวงโคจร (The Final Mission)",
+                    "<b>ออกแบบ System Integration:</b> นำระบบทั้งหมด (OBC, EPS, GPS, Camera, COMMS) มารวมร่างกันเป็น State Machine",
+                    "<b>เพิ่มภารกิจท้าทาย (Optional):</b> ออกแบบข้อสอบเพิ่มคะแนนพิเศษ เช่น High-Speed Downlink และระบบระบุกลุ่มดาวจำลอง (Star Tracker)",
+                    "<b>เคลียร์ระบบขั้นสุดท้าย:</b> แก้บั๊ก Testbench, ขยายเวลา Timeout, เช็ค CRC32 และแบ่งไฟล์ Release ให้ชัดเจน"
+                ],
+                highlight: "จุดสูงสุดของหลักสูตร: การบูรณาการวิศวกรรมระบบดาวเทียมทั้งฮาร์ดแวร์และซอฟต์แวร์"
+            },
+            {
+                week: 6,
+                date: "29 มิ.ย. - 3 ก.ค.",
+                title: "Server Infrastructure (Ad-hoc Task)",
+                icon: "fa-server",
+                tasks: [
+                    "<b>รับงานมอบหมายพิเศษ:</b> เมื่อตัวหลักสูตร FlatSat เริ่มเสร็จสมบูรณ์และนิ่งแล้ว ได้รับมอบหมายงานทางวิศวกรรมเพิ่มเติม",
+                    "<b>ตั้งค่าระบบเครือข่าย:</b> ดำเนินการติดตั้งและตั้งค่า Debian Server ให้กับทีมเพื่อใช้เป็นโครงสร้างพื้นฐานในการพัฒนางานอื่นๆ ต่อไป"
+                ],
+                highlight: "แสดงศักยภาพนอกเหนือจากงานหลักด้านโค้ดดิ้ง สู่การจัดการระดับ Infrastructure"
+            },
+            {
+                week: 7,
+                date: "6 ก.ค. - 10 ก.ค.",
+                title: "Internationalization",
+                icon: "fa-language",
+                tasks: [
+                    "<b>ยกระดับผลิตภัณฑ์สู่สากล:</b> ต้อนรับคณะตัวแทนจากฟิลิปปินส์ที่เข้ามาเยี่ยมชมและศึกษาผลิตภัณฑ์ FlatSat Learning Kit",
+                    "<b>แปลเอกสาร (Translation):</b> ดำเนินการแปลเอกสารคู่มือปฏิบัติการทั้งหมดให้เป็นเวอร์ชันภาษาอังกฤษ เพื่อเตรียมรองรับกลุ่มผู้ใช้งานระดับนานาชาติ"
+                ],
+                highlight: "ทักษะด้านการสื่อสารและการแปลเอกสารวิชาการทางวิศวกรรม"
+            },
+            {
+                week: 8,
+                date: "13 ก.ค. - 17 ก.ค.",
+                title: "Advanced Hardware Integration (Ad-hoc)",
+                icon: "fa-microchip",
+                tasks: [
+                    "<b>ทดสอบฮาร์ดแวร์ใหม่:</b> ได้รับมอบหมายพิเศษให้ทำการทดสอบและเขียนโปรแกรมบนบอร์ดประมวลผลประสิทธิภาพสูง (STM32H723ZGT6U)",
+                    "<b>การเชื่อมต่อ eMMC:</b> ศึกษาและพัฒนาโค้ดจนสามารถอ่านและเขียนไฟล์ข้อมูลขนาดใหญ่ลงในหน่วยความจำชิป eMMC ได้สำเร็จตามความคาดหมาย"
+                ],
+                highlight: "การเรียนรู้และรับมือกับสถาปัตยกรรมไมโครคอนโทรลเลอร์รุ่นใหม่ที่ซับซ้อนขึ้น"
+            },
+            {
+                week: 9,
+                date: "20 ก.ค. - 24 ก.ค.",
+                title: "FlatSat Desktop UI Development",
+                icon: "fa-desktop",
+                tasks: [
+                    "<b>ต่อยอดการใช้งาน (UX/UI):</b> ได้รับโปรเจกต์มอบหมายใหม่ในการพัฒนาซอฟต์แวร์ควบคุมการบินและแสดงผลข้อมูลสำหรับ FlatSat",
+                    "<b>FlatSat Desktop:</b> เริ่มต้นพัฒนาระบบ Dashboard ที่มี GUI สวยงาม เพื่อให้ผู้ใช้งานสามารถสั่งการและรับชม Telemetry ของดาวเทียมได้ง่ายๆ เพียงแค่ปลายนิ้วคลิก"
+                ],
+                highlight: "ก้าวเข้าสู่การพัฒนา Application ฝั่งผู้ใช้งาน (Frontend/Desktop App)"
+            }
+        ];
+
+        const navContainer = document.getElementById('tab-nav');
+        const contentContainer = document.getElementById('content-container');
+
+        // Function to render Tabs
+        function renderTabs() {
+            timelineData.forEach((data, index) => {
+                const btn = document.createElement('button');
+                btn.className = `timeline-btn w-full text-left px-5 py-4 border-l-2 md:border-l-4 md:border-b-0 border-b-2 flex items-center gap-3 shrink-0 md:shrink md:w-auto hover:bg-space-800
+                                ${index === 0 ? 'active border-sky-500' : 'border-transparent text-gray-400'}`;
+                btn.onclick = () => switchTab(index);
+                btn.id = `tab-btn-${index}`;
+                
+                btn.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold tracking-wider ${index === 0 ? 'text-sky-400' : 'text-gray-500'} uppercase transition-colors" id="tab-label-${index}">Week ${data.week}</span>
+                        <span class="text-sm hidden md:block whitespace-nowrap truncate font-medium mt-1">${data.date}</span>
+                    </div>
+                `;
+                navContainer.appendChild(btn);
+            });
+        }
+
+        // Function to render Content
+        function renderContent() {
+            timelineData.forEach((data, index) => {
+                const contentDiv = document.createElement('div');
+                contentDiv.id = `tab-content-${index}`;
+                contentDiv.className = `tab-content ${index === 0 ? 'active' : ''}`;
+                
+                let tasksHtml = data.tasks.map(task => `
+                    <li class="flex items-start gap-4">
+                        <div class="mt-1 w-2 h-2 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)] shrink-0"></div>
+                        <p class="text-gray-300 text-sm md:text-base leading-relaxed">${task}</p>
+                    </li>
+                `).join('');
+
+                contentDiv.innerHTML = `
+                    <div class="flex items-center gap-2 text-sky-400 mb-2 font-medium">
+                        <i class="fa-solid fa-calendar-days text-sm"></i> 
+                        <span class="text-sm tracking-wide">${data.date}</span>
+                    </div>
+                    <h3 class="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-space-800 border border-gray-700 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid ${data.icon} text-xl text-sky-400"></i>
+                        </div>
+                        ${data.title}
+                    </h3>
+                    
+                    <div class="bg-space-900/50 rounded-xl p-6 border border-gray-800/50 mb-6">
+                        <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Task & Operations</h4>
+                        <ul class="space-y-4">
+                            ${tasksHtml}
+                        </ul>
+                    </div>
+
+                    ${data.highlight ? `
+                        <div class="bg-gradient-to-r from-sky-900/40 to-indigo-900/20 border border-sky-800/30 rounded-xl p-5 flex items-start gap-4">
+                            <i class="fa-solid fa-star text-amber-400 mt-1"></i>
+                            <div>
+                                <h4 class="text-sm font-semibold text-sky-300 mb-1">Key Takeaway / Highlight</h4>
+                                <p class="text-sm text-sky-100/80 leading-relaxed">${data.highlight}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                contentContainer.appendChild(contentDiv);
+            });
+        }
+
+        // Function to handle switching tabs
+        function switchTab(activeIndex) {
+            // Update Buttons
+            timelineData.forEach((_, index) => {
+                const btn = document.getElementById(`tab-btn-${index}`);
+                const label = document.getElementById(`tab-label-${index}`);
+                const content = document.getElementById(`tab-content-${index}`);
+                
+                if (index === activeIndex) {
+                    btn.classList.add('active', 'border-sky-500');
+                    btn.classList.remove('border-transparent');
+                    label.classList.add('text-sky-400');
+                    label.classList.remove('text-gray-500');
+                    
+                    // Add animation class
+                    content.classList.add('active');
+                } else {
+                    btn.classList.remove('active', 'border-sky-500');
+                    btn.classList.add('border-transparent');
+                    label.classList.remove('text-sky-400');
+                    label.classList.add('text-gray-500');
+                    
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Scroll selected button into view on mobile
+            const activeBtn = document.getElementById(`tab-btn-${activeIndex}`);
+            if(window.innerWidth < 768) {
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTabs();
+            renderContent();
+        });
+    </script>
+</body>
+</html>
