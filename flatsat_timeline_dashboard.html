@@ -217,6 +217,7 @@
                 date: "13 ก.ค. - 17 ก.ค.",
                 title: "Advanced Hardware Integration (Ad-hoc)",
                 icon: "fa-microchip",
+                video: "eMMC_Testing.mp4",
                 tasks: [
                     "<b>ทดสอบฮาร์ดแวร์ใหม่:</b> ได้รับมอบหมายพิเศษให้ทำการทดสอบและเขียนโปรแกรมบนบอร์ดประมวลผลประสิทธิภาพสูง (STM32H723ZGT6U)",
                     "<b>การเชื่อมต่อ eMMC:</b> ศึกษาและพัฒนาโค้ดจนสามารถอ่านและเขียนไฟล์ข้อมูลขนาดใหญ่ลงในหน่วยความจำชิป eMMC ได้สำเร็จตามความคาดหมาย"
@@ -297,6 +298,20 @@
                             <div>
                                 <h4 class="text-sm font-semibold text-sky-300 mb-1">Key Takeaway / Highlight</h4>
                                 <p class="text-sm text-sky-100/80 leading-relaxed">${data.highlight}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${data.video ? `
+                        <div class="mt-6 bg-space-900/50 rounded-xl p-4 border border-gray-800/50">
+                            <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-video text-sky-500"></i> Video Demonstration
+                            </h4>
+                            <div class="rounded-lg overflow-hidden border border-gray-800 shadow-lg">
+                                <video controls class="w-full h-auto max-h-[400px] object-cover bg-black" preload="metadata">
+                                    <source src="${data.video}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
                             </div>
                         </div>
                     ` : ''}
