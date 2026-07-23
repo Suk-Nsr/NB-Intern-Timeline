@@ -199,6 +199,18 @@
                 <i
                     class="fa-solid fa-rocket relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
             </button>
+
+            <div class="mt-8 flex justify-center gap-4">
+                <a href="https://github.com/Suk-Nsr/FlatSat-Labs" target="_blank"
+                    class="text-sm bg-black/40 hover:bg-black/60 border border-white/10 text-white py-2 px-5 rounded-full flex items-center gap-2 transition-colors shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                    <i class="fa-brands fa-github text-lg"></i> FlatSat Labs
+                </a>
+                <a href="https://docs.google.com/document/d/1NqII6YFl51nuvPPIPfIL7Pj_V7Okc5KKO1MVzkOzYm8/edit?usp=sharing"
+                    target="_blank"
+                    class="text-sm bg-sky-500/20 hover:bg-sky-500/40 border border-sky-400/30 text-sky-100 py-2 px-5 rounded-full flex items-center gap-2 transition-colors shadow-[0_0_10px_rgba(14,165,233,0.2)]">
+                    <i class="fa-solid fa-book text-sky-400"></i> Documentation
+                </a>
+            </div>
         </div>
     </div>
 
@@ -217,7 +229,18 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-white drop-shadow-lg">NBSPACE FlatSat Labs</h1>
-                    <p class="text-sm text-sky-200 font-medium">Mission Timeline (25 พ.ค. - 24 ก.ค.)</p>
+                    <p class="text-sm text-sky-200 font-medium mb-2">Mission Timeline (25 พ.ค. - 24 ก.ค.)</p>
+                    <div class="flex gap-2 pointer-events-auto">
+                        <a href="https://github.com/Suk-Nsr/FlatSat-Labs" target="_blank" title="GitHub Repository"
+                            class="text-xs bg-black/40 hover:bg-black/60 border border-white/10 text-white py-1 px-3 rounded-full flex items-center gap-2 transition-colors">
+                            <i class="fa-brands fa-github"></i> Repo
+                        </a>
+                        <a href="https://docs.google.com/document/d/1NqII6YFl51nuvPPIPfIL7Pj_V7Okc5KKO1MVzkOzYm8/edit?usp=sharing"
+                            target="_blank" title="Documentation"
+                            class="text-xs bg-sky-500/20 hover:bg-sky-500/40 border border-sky-400/30 text-sky-100 py-1 px-3 rounded-full flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-book"></i> Docs
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -350,8 +373,8 @@
             bumpMap: textureLoader.load('assets/earthButPictures/topography_8K.jpg'),
             bumpScale: 1.5, // Increased significantly so mountains cast visible shadows
             specularMap: textureLoader.load('assets/earthButPictures/earth_landocean_8K.jpg'),
-            specular: new THREE.Color(0x999999), // Brighter specular reflection for oceans
-            shininess: 60,
+            specular: new THREE.Color(0x222222), // Reduced specular reflection to avoid glaring white blowout
+            shininess: 40, // Higher shininess concentrates the reflection so it's a smaller, more realistic glint
             emissiveMap: textureLoader.load('assets/earthButPictures/earth_nightlights_8K.jpg'),
             emissive: new THREE.Color(0xffffff),
             emissiveIntensity: 0.8 // Brighter night lights
@@ -360,11 +383,11 @@
         // Custom shader injection to make nightlights ONLY visible on the dark side of the earth
         earthMaterial.onBeforeCompile = function (shader) {
             shader.uniforms.sunDirection = { value: new THREE.Vector3(50, 20, 30).normalize() };
-            
+
             shader.vertexShader = `
                 varying vec3 vEarthWorldNormal;
             ` + shader.vertexShader;
-            
+
             shader.vertexShader = shader.vertexShader.replace(
                 '#include <worldpos_vertex>',
                 `
@@ -373,12 +396,12 @@
                 vEarthWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
                 `
             );
-            
+
             shader.fragmentShader = `
                 uniform vec3 sunDirection;
                 varying vec3 vEarthWorldNormal;
             ` + shader.fragmentShader;
-            
+
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <emissivemap_fragment>',
                 `
