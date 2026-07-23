@@ -1,12 +1,22 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBSPACE FlatSat Labs - Timeline</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>NBSPACE FlatSat Labs - 3D Timeline</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Three.js & Loaders from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -29,461 +39,814 @@
     </script>
     <style>
         body {
-            background-color: #0b0f19;
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
             color: #f3f4f6;
-            background-image: 
-                linear-gradient(to bottom, rgba(11, 15, 25, 0.6), rgba(11, 15, 25, 0.95)),
-                url('assets/space_bg.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
         }
-        
-        /* Custom Scrollbar */
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            pointer-events: auto;
+        }
+
+        #content-overlay {
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        #content-overlay.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .hud-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem;
+            pointer-events: auto;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        }
+
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0b0f19;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 1s ease;
+        }
+
+        .orbit-spinner {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid rgba(14, 165, 233, 0.2);
+            border-top-color: #0ea5e9;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
         }
+
         ::-webkit-scrollbar-track {
-            background: rgba(17, 24, 39, 0.5);
+            background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: #374151;
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #4b5563;
         }
 
-        .tab-content {
-            display: none;
-            opacity: 0;
-            transform: translateY(15px);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        .nav-dot {
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .tab-content.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Staggered animation for children inside tab content */
-        .tab-content.active > * {
-            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        .tab-content.active > *:nth-child(1) { animation-delay: 0.05s; }
-        .tab-content.active > *:nth-child(2) { animation-delay: 0.1s; }
-        .tab-content.active > *:nth-child(3) { animation-delay: 0.15s; }
-        .tab-content.active > *:nth-child(4) { animation-delay: 0.2s; }
-        .tab-content.active > *:nth-child(5) { animation-delay: 0.25s; }
 
-        @keyframes slideUpFade {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .timeline-btn {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .timeline-btn::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0; width: 4px;
-            background: #0ea5e9;
-            transform: scaleY(0);
-            transform-origin: left;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 0 10px rgba(14, 165, 233, 0.8);
-        }
-        .timeline-btn.active::before {
-            transform: scaleY(1);
-        }
-        .timeline-btn.active {
-            background: linear-gradient(90deg, rgba(14,165,233,0.15) 0%, rgba(14,165,233,0.02) 100%);
-            color: #38bdf8;
-        }
-        
-        .glass-panel {
-            background: rgba(21, 30, 46, 0.5);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        .nav-dot:hover {
+            transform: scale(1.2);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-sky-500 selection:text-white">
 
-    <header class="w-full glass-panel sticky top-0 z-50 border-b border-white/5">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-lg shadow-sky-500/20">
-                        <i class="fa-solid fa-satellite text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white">NBSPACE FlatSat Labs</h1>
-                        <p class="text-xs md:text-sm text-gray-400">Project Evolution Timeline (25 พ.ค. - 24 ก.ค.)</p>
-                    </div>
+<body class="font-sans antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="orbit-spinner mb-4"></div>
+        <h2 class="text-white text-xl font-bold tracking-widest uppercase">Initializing Orbit</h2>
+        <p class="text-sky-400 text-sm mt-2" id="loading-text">Loading 3D Models & Assets...</p>
+    </div>
+
+    <!-- Intro / Home Screen -->
+    <div id="intro-screen"
+        class="fixed inset-0 z-[5000] bg-[#0b0f19]/90 backdrop-blur-md flex-col items-center justify-center text-center opacity-0 transition-opacity duration-1000 pointer-events-auto"
+        style="display: none;">
+        <div
+            class="glass-panel p-12 rounded-3xl max-w-2xl border-t border-sky-400/50 transform transition-all hover:scale-105 duration-500">
+            <div
+                class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-[0_0_30px_rgba(14,165,233,0.5)] mb-6">
+                <i class="fa-solid fa-satellite text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">NBSPACE Internship</h1>
+            <p class="text-sky-300 text-lg mb-8 font-medium">Mission Progress Report & Timeline</p>
+
+            <div class="bg-black/40 rounded-xl p-6 mb-10 text-left border border-white/10">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2"><i
+                        class="fa-solid fa-circle-info mr-2"></i>Mission Briefing</h3>
+                <p class="text-gray-300 text-sm leading-relaxed">
+                    ยินดีต้อนรับสู่ศูนย์ควบคุมภารกิจ FlatSat! <br>
+                    คุณกำลังจะเข้าสู่วงโคจรเพื่อติดตามผลการปฏิบัติงานในแต่ละสัปดาห์
+                    ระบบจะนำพาดาวเทียมของคุณบินไปตามจุด Waypoint ต่างๆ รอบโลก เพื่อแสดงภารกิจที่สำเร็จแล้ว
+                </p>
+            </div>
+
+            <button id="btn-enter-orbit"
+                class="group relative px-10 py-4 bg-sky-500 hover:bg-sky-400 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(14,165,233,0.6)] hover:shadow-[0_0_40px_rgba(14,165,233,0.8)] flex items-center justify-center mx-auto gap-3 overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                </div>
+                <span class="relative z-10">Initiate Orbit Sequence</span>
+                <i
+                    class="fa-solid fa-rocket relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3D Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer">
+
+        <!-- Persistent HUD -->
+        <div class="hud-top flex justify-between items-start">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(14,165,233,0.4)]">
+                    <i class="fa-solid fa-satellite text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white drop-shadow-lg">NBSPACE FlatSat Labs</h1>
+                    <p class="text-sm text-sky-200 font-medium">Mission Timeline (25 พ.ค. - 24 ก.ค.)</p>
                 </div>
             </div>
-            
-            <!-- Satellite Progress Bar -->
-            <div class="mt-8 mb-2 relative w-full hidden md:block max-w-4xl mx-auto">
-                <!-- Track -->
-                <div class="absolute top-1/2 left-0 w-full h-1 bg-white/10 rounded-full -translate-y-1/2"></div>
-                
-                <!-- Progress Line -->
-                <div id="progress-line" class="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full -translate-y-1/2 transition-all duration-700 ease-in-out" style="width: 0%;"></div>
-                
-                <!-- Dots Container -->
-                <div id="progress-dots" class="relative flex justify-between w-full z-0">
-                    <!-- Dots injected by JS -->
-                </div>
-                
-                <!-- Satellite Icon -->
-                <div id="satellite-indicator" class="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out z-10 text-sky-400" style="left: 0%;">
-                    <div class="w-8 h-8 rounded-full bg-space-800 border border-sky-500 flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.8)]">
-                        <i class="fa-solid fa-satellite text-sm transform -rotate-45"></i>
-                    </div>
-                </div>
+
+            <div class="glass-panel px-4 py-2 rounded-full flex items-center gap-3">
+                <i class="fa-solid fa-route text-sky-400"></i>
+                <span class="text-white font-mono text-sm font-bold" id="hud-waypoint">En Route...</span>
             </div>
         </div>
-    </header>
 
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-6">
-        
-        <!-- Sidebar Navigation (Tabs) -->
-        <div class="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
-            <div class="glass-panel rounded-2xl overflow-hidden sticky top-28 transition-transform duration-300 hover:shadow-[0_0_30px_rgba(14,165,233,0.1)]">
-                <div class="px-5 py-4 border-b border-white/5 bg-white/5">
-                    <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-timeline text-sky-500"></i> Project Timeline
-                    </h2>
-                </div>
-                <!-- Navigation Container -->
-                <nav id="tab-nav" class="flex flex-row md:flex-col overflow-x-auto md:overflow-y-auto max-h-[60vh] scroll-smooth">
-                    <!-- Tabs will be injected here by JS -->
-                </nav>
+        <!-- Dynamic Content Overlay -->
+        <div id="content-overlay"
+            class="glass-panel w-[90%] max-w-4xl max-h-[80vh] overflow-y-auto rounded-3xl p-6 md:p-10 border-t border-sky-400/50">
+            <div id="dynamic-content">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="mt-8 flex justify-between items-center border-t border-white/10 pt-6">
+                <button id="btn-previous"
+                    class="group relative px-6 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-bold rounded-xl transition-all duration-300 flex items-center gap-3">
+                    <i class="fa-solid fa-arrow-left relative z-10 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="relative z-10">Previous Week</span>
+                </button>
+                <button id="btn-continue"
+                    class="group relative px-8 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(14,165,233,0.4)] hover:shadow-[0_0_30px_rgba(14,165,233,0.6)] flex items-center gap-3 active:scale-95 overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    </div>
+                    <span class="relative z-10">Next Week</span>
+                    <i class="fa-solid fa-arrow-right relative z-10 group-hover:translate-x-1 transition-transform"></i>
+                </button>
             </div>
         </div>
 
-        <!-- Tab Content Area -->
-        <div class="w-full md:w-2/3 lg:w-3/4">
-            
-            <!-- Project Links -->
-            <div class="glass-panel rounded-2xl overflow-hidden mb-6 p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center justify-between transition-transform duration-300 hover:shadow-[0_0_30px_rgba(14,165,233,0.1)]">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-space-800/50 flex items-center justify-center border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.15)]">
-                        <i class="fa-solid fa-link text-sky-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-white">Project Resources</h3>
-                        <p class="text-xs text-gray-400">Documents and source code</p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <a href="https://docs.google.com/document/d/1NqII6YFl51nuvPPIPfIL7Pj_V7Okc5KKO1MVzkOzYm8/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)] active:scale-95">
-                        <i class="fa-solid fa-file-word"></i> Google Docs
-                    </a>
-                    <a href="https://github.com/Suk-Nsr/FlatSat-Labs.git" target="_blank" rel="noopener noreferrer" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] active:scale-95">
-                        <i class="fa-brands fa-github"></i> GitHub
-                    </a>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-2xl overflow-hidden min-h-[500px] relative transition-all duration-500 hover:shadow-[0_0_40px_rgba(14,165,233,0.1)]">
-                <!-- Decorative background elements -->
-                <div class="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none transition-all duration-700 ease-in-out"></div>
-                <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none transition-all duration-700 ease-in-out"></div>
-                
-                <div id="content-container" class="relative z-10 p-6 md:p-8 lg:p-10">
-                    <!-- Content will be injected here by JS -->
-                </div>
+        <!-- Navigation Bar -->
+        <div id="nav-bar"
+            class="absolute bottom-6 left-1/2 -translate-x-1/2 glass-panel rounded-full px-6 py-3 flex gap-3 pointer-events-auto z-50 shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+            <div id="nav-dots" class="flex items-center gap-3">
+                <!-- Injected via JS -->
             </div>
         </div>
-    </main>
+
+    </div>
 
     <script>
-        // Data Structure for the 9 Weeks
+        // Data Structure
         const timelineData = [
-            {
-                week: 1,
-                date: "25 พ.ค. - 29 พ.ค.",
-                title: "Project Initiation & Problem Analysis",
-                icon: "fa-magnifying-glass",
-                tasks: [
-                    "<b>ทำความเข้าใจระบบ:</b> ศึกษาวิธีการใช้งาน FlatSat และวิเคราะห์ข้อบกพร่องของชุดการทดลองเดิม",
-                    "<b>วิเคราะห์ปัญหา (Pain Points):</b> พบว่าแล็บเดิมมีลักษณะเพียง 'อ่านค่าเซนเซอร์แล้วจด' และแจกโค้ดสำเร็จรูป (Ready-to-use) ทำให้นักศึกษาไม่ได้ฝึกคิดวิเคราะห์",
-                    "<b>เสนอแนวทางแก้ไข (Solution):</b> เปลี่ยนมาใช้แนวคิด <b>'Skeleton Code'</b> (โค้ดเจาะรู) เพื่อบังคับให้ผู้เรียนต้องเปิดอ่าน Data Sheet และทำความเข้าใจ Library ด้วยตัวเอง"
-                ],
-                highlight: "กำหนดมาตรฐานสากล: คอมเมนต์และอธิบายการทำงานในโค้ดทั้งหมดต้องเป็นภาษาอังกฤษ"
-            },
-            {
-                week: 2,
-                date: "1 มิ.ย. - 5 มิ.ย.",
-                title: "Brainstorming & Prototype Development",
-                icon: "fa-lightbulb",
-                tasks: [
-                    "<b>ออกแบบโครงสร้างแล็บ:</b> วางโครงร่างหลักสูตรตั้งต้นไว้ 8 แล็บ ครอบคลุมตั้งแต่ OBC, การจัดการไฟล์ (SPI Flash/SD Card), พลังงาน (Safe Mode), การสื่อสาร (KISS Protocol) และภารกิจจำลอง",
-                    "<b>สร้าง Repository:</b> ก่อตั้งโปรเจกต์ <code>Flatsat-Labs</code> บน GitHub (เริ่มวันที่ 4 มิ.ย.)",
-                    "<b>พัฒนาโค้ดต้นแบบ (Prototype):</b> พัฒนาโค้ดและเฉลยสำหรับ Lab 1 (OBC Init), Lab 2 (Data Storage) และ Lab 3 (EPS)",
-                    "<b>ปรับโครงสร้างโค้ด:</b> ปรับปรุงเป็นรูปแบบ Modular Programming เพื่อความเป็นระเบียบและง่ายต่อการเรียนรู้"
-                ],
-                highlight: "กำเนิดโครงร่างหลักสูตร FlatSat ชุดใหม่ที่เน้น Systems Engineering"
-            },
-            {
-                week: 3,
-                date: "8 มิ.ย. - 12 มิ.ย.",
-                title: "Automation & Core Features",
-                icon: "fa-code-branch",
-                tasks: [
-                    "<b>สร้างระบบ CI/CD (Automation):</b> พัฒนา GitHub Actions Workflow เพื่อแพ็กไฟล์ ZIP สำหรับแจกจ่ายให้นักศึกษาดาวน์โหลดอัตโนมัติ (Release Files)",
-                    "<b>ปรับปรุงเสถียรภาพโค้ด:</b> แก้ไขบั๊ก, เพิ่ม Testbench ตรวจสอบความถูกต้อง, ปรับแก้โค้ดควบคุมพลังงาน และเปลี่ยนมาใช้เช็ค Serial Input แทนคำสั่ง delay()",
-                    "<b>พัฒนาระบบสื่อสาร:</b> เริ่มพัฒนาโค้ดสำหรับ Lab 4 (RF Communication & KISS Protocol) พร้อมทั้งเขียน Testbench ฝั่งดาวเทียม"
-                ],
-                highlight: "นำทักษะ Software Engineering มาประยุกต์ใช้สร้างระบบแจกจ่ายไฟล์อัตโนมัติ"
-            },
-            {
-                week: 4,
-                date: "15 มิ.ย. - 19 มิ.ย.",
-                title: "The Great Restructure",
-                icon: "fa-layer-group",
-                tasks: [
-                    "<b>รับมือความท้าทาย:</b> ได้รับคำสั่งด่วนให้ยุบเนื้อหาหลักสูตรลงให้เหลือเพียง 4-5 แล็บ",
-                    "<b>แก้ปัญหาแบบ Agility:</b> ตัดสินใจแยก Repository ออกเป็น 2 ชุดเพื่อคงเนื้อหาสำคัญไว้ ได้แก่ <code>Full_Labs</code> (7 แล็บเต็ม) และ <code>Final_Labs</code> (ยุบเหลือ 5 แล็บ)",
-                    "<b>การควบรวมเนื้อหา (Final_Labs):</b> นำ Lab 1+4 เดิมมารวมกันเป็น Lab 1 ใหม่ และนำ Lab 2+3 เดิมมารวมกันเป็น Lab 2 ใหม่ เพื่อความกระชับแต่ความรู้ยังครบถ้วน"
-                ],
-                highlight: "การปรับตัวแก้ไขแผนงานอย่างรวดเร็ว (Agility) โดยไม่ทิ้งสาระสำคัญของหลักสูตร"
-            },
-            {
-                week: 5,
-                date: "22 มิ.ย. - 26 มิ.ย.",
-                title: "The Final Mission & System Integration",
-                icon: "fa-rocket",
-                tasks: [
-                    "<b>จัดทำเอกสาร Lab 7:</b> ร่างข้อกำหนดการทำงาน (Functional Requirements) สำหรับภารกิจจำลอง 1 รอบวงโคจร (The Final Mission)",
-                    "<b>ออกแบบ System Integration:</b> นำระบบทั้งหมด (OBC, EPS, GPS, Camera, COMMS) มารวมร่างกันเป็น State Machine",
-                    "<b>เพิ่มภารกิจท้าทาย (Optional):</b> ออกแบบข้อสอบเพิ่มคะแนนพิเศษ เช่น High-Speed Downlink และระบบระบุกลุ่มดาวจำลอง (Star Tracker)",
-                    "<b>เคลียร์ระบบขั้นสุดท้าย:</b> แก้บั๊ก Testbench, ขยายเวลา Timeout, เช็ค CRC32 และแบ่งไฟล์ Release ให้ชัดเจน"
-                ],
-                highlight: "จุดสูงสุดของหลักสูตร: การบูรณาการวิศวกรรมระบบดาวเทียมทั้งฮาร์ดแวร์และซอฟต์แวร์"
-            },
-            {
-                week: 6,
-                date: "29 มิ.ย. - 3 ก.ค.",
-                title: "Server Infrastructure (Ad-hoc Task)",
-                icon: "fa-server",
-                tasks: [
-                    "<b>รับงานมอบหมายพิเศษ:</b> เมื่อตัวหลักสูตร FlatSat เริ่มเสร็จสมบูรณ์และนิ่งแล้ว ได้รับมอบหมายงานทางวิศวกรรมเพิ่มเติม",
-                    "<b>ตั้งค่าระบบเครือข่าย:</b> ดำเนินการติดตั้งและตั้งค่า Debian Server ให้กับทีมเพื่อใช้เป็นโครงสร้างพื้นฐานในการพัฒนางานอื่นๆ ต่อไป"
-                ],
-                highlight: "แสดงศักยภาพนอกเหนือจากงานหลักด้านโค้ดดิ้ง สู่การจัดการระดับ Infrastructure"
-            },
-            {
-                week: 7,
-                date: "6 ก.ค. - 10 ก.ค.",
-                title: "Internationalization",
-                icon: "fa-language",
-                tasks: [
-                    "<b>ยกระดับผลิตภัณฑ์สู่สากล:</b> ต้อนรับคณะตัวแทนจากฟิลิปปินส์ที่เข้ามาเยี่ยมชมและศึกษาผลิตภัณฑ์ FlatSat Learning Kit",
-                    "<b>แปลเอกสาร (Translation):</b> ดำเนินการแปลเอกสารคู่มือปฏิบัติการทั้งหมดให้เป็นเวอร์ชันภาษาอังกฤษ เพื่อเตรียมรองรับกลุ่มผู้ใช้งานระดับนานาชาติ"
-                ],
-                highlight: "ทักษะด้านการสื่อสารและการแปลเอกสารวิชาการทางวิศวกรรม"
-            },
-            {
-                week: 8,
-                date: "13 ก.ค. - 17 ก.ค.",
-                title: "Advanced Hardware Integration (Ad-hoc)",
-                icon: "fa-microchip",
-                video: "eMMC_Testing.mp4",
-                tasks: [
-                    "<b>ทดสอบฮาร์ดแวร์ใหม่:</b> ได้รับมอบหมายพิเศษให้ทำการทดสอบและเขียนโปรแกรมบนบอร์ดประมวลผลประสิทธิภาพสูง (STM32H723ZGT6U)",
-                    "<b>การเชื่อมต่อ eMMC:</b> ศึกษาและพัฒนาโค้ดจนสามารถอ่านและเขียนไฟล์ข้อมูลขนาดใหญ่ลงในหน่วยความจำชิป eMMC ได้สำเร็จตามความคาดหมาย"
-                ],
-                highlight: "การเรียนรู้และรับมือกับสถาปัตยกรรมไมโครคอนโทรลเลอร์รุ่นใหม่ที่ซับซ้อนขึ้น"
-            },
-            {
-                week: 9,
-                date: "20 ก.ค. - 24 ก.ค.",
-                title: "FlatSat Desktop UI Development",
-                icon: "fa-desktop",
-                tasks: [
-                    "<b>ต่อยอดการใช้งาน (UX/UI):</b> ได้รับโปรเจกต์มอบหมายใหม่ในการพัฒนาซอฟต์แวร์ควบคุมการบินและแสดงผลข้อมูลสำหรับ FlatSat",
-                    "<b>FlatSat Desktop:</b> เริ่มต้นพัฒนาระบบ Dashboard ที่มี GUI สวยงาม เพื่อให้ผู้ใช้งานสามารถสั่งการและรับชม Telemetry ของดาวเทียมได้ง่ายๆ เพียงแค่ปลายนิ้วคลิก"
-                ],
-                highlight: "ก้าวเข้าสู่การพัฒนา Application ฝั่งผู้ใช้งาน (Frontend/Desktop App)"
-            }
+            { week: 1, date: "25 พ.ค. - 29 พ.ค.", title: "Project Initiation & Problem Analysis", icon: "fa-magnifying-glass", highlight: "กำหนดมาตรฐานสากล: คอมเมนต์และอธิบายการทำงานในโค้ดทั้งหมดต้องเป็นภาษาอังกฤษ", tasks: ["<b>ทำความเข้าใจระบบ:</b> ศึกษาวิธีการใช้งาน FlatSat และวิเคราะห์ข้อบกพร่องของชุดการทดลองเดิม", "<b>วิเคราะห์ปัญหา (Pain Points):</b> พบว่าแล็บเดิมมีลักษณะเพียง 'อ่านค่าเซนเซอร์แล้วจด' และแจกโค้ดสำเร็จรูป (Ready-to-use) ทำให้นักศึกษาไม่ได้ฝึกคิดวิเคราะห์", "<b>เสนอแนวทางแก้ไข (Solution):</b> เปลี่ยนมาใช้แนวคิด <b>'Skeleton Code'</b> (โค้ดเจาะรู) เพื่อบังคับให้ผู้เรียนต้องเปิดอ่าน Data Sheet และทำความเข้าใจ Library ด้วยตัวเอง"] },
+            { week: 2, date: "1 มิ.ย. - 5 มิ.ย.", title: "Brainstorming & Prototype Development", icon: "fa-lightbulb", highlight: "กำเนิดโครงร่างหลักสูตร FlatSat ชุดใหม่ที่เน้น Systems Engineering", tasks: ["<b>ออกแบบโครงสร้างแล็บ:</b> วางโครงร่างหลักสูตรตั้งต้นไว้ 8 แล็บ ครอบคลุมตั้งแต่ OBC, การจัดการไฟล์ (SPI Flash/SD Card), พลังงาน (Safe Mode), การสื่อสาร (KISS Protocol) และภารกิจจำลอง", "<b>สร้าง Repository:</b> ก่อตั้งโปรเจกต์ <code>Flatsat-Labs</code> บน GitHub (เริ่มวันที่ 4 มิ.ย.)", "<b>พัฒนาโค้ดต้นแบบ (Prototype):</b> พัฒนาโค้ดและเฉลยสำหรับ Lab 1 (OBC Init), Lab 2 (Data Storage) และ Lab 3 (EPS)", "<b>ปรับโครงสร้างโค้ด:</b> ปรับปรุงเป็นรูปแบบ Modular Programming เพื่อความเป็นระเบียบและง่ายต่อการเรียนรู้"] },
+            { week: 3, date: "8 มิ.ย. - 12 มิ.ย.", title: "Automation & Core Features", icon: "fa-code-branch", highlight: "นำทักษะ Software Engineering มาประยุกต์ใช้สร้างระบบแจกจ่ายไฟล์อัตโนมัติ", tasks: ["<b>สร้างระบบ CI/CD (Automation):</b> พัฒนา GitHub Actions Workflow เพื่อแพ็กไฟล์ ZIP สำหรับแจกจ่ายให้นักศึกษาดาวน์โหลดอัตโนมัติ (Release Files)", "<b>ปรับปรุงเสถียรภาพโค้ด:</b> แก้ไขบั๊ก, เพิ่ม Testbench ตรวจสอบความถูกต้อง, ปรับแก้โค้ดควบคุมพลังงาน และเปลี่ยนมาใช้เช็ค Serial Input แทนคำสั่ง delay()", "<b>พัฒนาระบบสื่อสาร:</b> เริ่มพัฒนาโค้ดสำหรับ Lab 4 (RF Communication & KISS Protocol) พร้อมทั้งเขียน Testbench ฝั่งดาวเทียม"] },
+            { week: 4, date: "15 มิ.ย. - 19 มิ.ย.", title: "The Great Restructure", icon: "fa-layer-group", highlight: "การปรับตัวแก้ไขแผนงานอย่างรวดเร็ว (Agility) โดยไม่ทิ้งสาระสำคัญของหลักสูตร", tasks: ["<b>รับมือความท้าทาย:</b> ได้รับคำสั่งด่วนให้ยุบเนื้อหาหลักสูตรลงให้เหลือเพียง 4-5 แล็บ", "<b>แก้ปัญหาแบบ Agility:</b> ตัดสินใจแยก Repository ออกเป็น 2 ชุดเพื่อคงเนื้อหาสำคัญไว้ ได้แก่ <code>Full_Labs</code> (7 แล็บเต็ม) และ <code>Final_Labs</code> (ยุบเหลือ 5 แล็บ)", "<b>การควบรวมเนื้อหา (Final_Labs):</b> นำ Lab 1+4 เดิมมารวมกันเป็น Lab 1 ใหม่ และนำ Lab 2+3 เดิมมารวมกันเป็น Lab 2 ใหม่ เพื่อความกระชับแต่ความรู้ยังครบถ้วน"] },
+            { week: 5, date: "22 มิ.ย. - 26 มิ.ย.", title: "The Final Mission & System Integration", icon: "fa-rocket", highlight: "จุดสูงสุดของหลักสูตร: การบูรณาการวิศวกรรมระบบดาวเทียมทั้งฮาร์ดแวร์และซอฟต์แวร์", tasks: ["<b>จัดทำเอกสาร Lab 7:</b> ร่างข้อกำหนดการทำงาน (Functional Requirements) สำหรับภารกิจจำลอง 1 รอบวงโคจร (The Final Mission)", "<b>ออกแบบ System Integration:</b> นำระบบทั้งหมด (OBC, EPS, GPS, Camera, COMMS) มารวมร่างกันเป็น State Machine", "<b>เพิ่มภารกิจท้าทาย (Optional):</b> ออกแบบข้อสอบเพิ่มคะแนนพิเศษ เช่น High-Speed Downlink และระบบระบุกลุ่มดาวจำลอง (Star Tracker)", "<b>เคลียร์ระบบขั้นสุดท้าย:</b> แก้บั๊ก Testbench, ขยายเวลา Timeout, เช็ค CRC32 และแบ่งไฟล์ Release ให้ชัดเจน"] },
+            { week: 6, date: "29 มิ.ย. - 3 ก.ค.", title: "Server Infrastructure (Ad-hoc Task)", icon: "fa-server", highlight: "แสดงศักยภาพนอกเหนือจากงานหลักด้านโค้ดดิ้ง สู่การจัดการระดับ Infrastructure", tasks: ["<b>รับงานมอบหมายพิเศษ:</b> เมื่อตัวหลักสูตร FlatSat เริ่มเสร็จสมบูรณ์และนิ่งแล้ว ได้รับมอบหมายงานทางวิศวกรรมเพิ่มเติม", "<b>ตั้งค่าระบบเครือข่าย:</b> ดำเนินการติดตั้งและตั้งค่า Debian Server ให้กับทีมเพื่อใช้เป็นโครงสร้างพื้นฐานในการพัฒนางานอื่นๆ ต่อไป"] },
+            { week: 7, date: "6 ก.ค. - 10 ก.ค.", title: "Internationalization", icon: "fa-language", highlight: "ทักษะด้านการสื่อสารและการแปลเอกสารวิชาการทางวิศวกรรม", tasks: ["<b>ยกระดับผลิตภัณฑ์สู่สากล:</b> ต้อนรับคณะตัวแทนจากฟิลิปปินส์ที่เข้ามาเยี่ยมชมและศึกษาผลิตภัณฑ์ FlatSat Learning Kit", "<b>แปลเอกสาร (Translation):</b> ดำเนินการแปลเอกสารคู่มือปฏิบัติการทั้งหมดให้เป็นเวอร์ชันภาษาอังกฤษ เพื่อเตรียมรองรับกลุ่มผู้ใช้งานระดับนานาชาติ"] },
+            { week: 8, date: "13 ก.ค. - 17 ก.ค.", title: "Advanced Hardware Integration", icon: "fa-microchip", video: "eMMC_Testing.mp4", highlight: "การเรียนรู้และรับมือกับสถาปัตยกรรมไมโครคอนโทรลเลอร์รุ่นใหม่ที่ซับซ้อนขึ้น", tasks: ["<b>ทดสอบฮาร์ดแวร์ใหม่:</b> ได้รับมอบหมายพิเศษให้ทำการทดสอบและเขียนโปรแกรมบนบอร์ดประมวลผลประสิทธิภาพสูง (STM32H723ZGT6U)", "<b>การเชื่อมต่อ eMMC:</b> ศึกษาและพัฒนาโค้ดจนสามารถอ่านและเขียนไฟล์ข้อมูลขนาดใหญ่ลงในหน่วยความจำชิป eMMC ได้สำเร็จตามความคาดหมาย"] },
+            { week: 9, date: "20 ก.ค. - 24 ก.ค.", title: "FlatSat Desktop UI Development", icon: "fa-desktop", highlight: "ก้าวเข้าสู่การพัฒนา Application ฝั่งผู้ใช้งาน (Frontend/Desktop App)", tasks: ["<b>ต่อยอดการใช้งาน (UX/UI):</b> ได้รับโปรเจกต์มอบหมายใหม่ในการพัฒนาซอฟต์แวร์ควบคุมการบินและแสดงผลข้อมูลสำหรับ FlatSat", "<b>FlatSat Desktop:</b> เริ่มต้นพัฒนาระบบ Dashboard ที่มี GUI สวยงาม เพื่อให้ผู้ใช้งานสามารถสั่งการและรับชม Telemetry ของดาวเทียมได้ง่ายๆ เพียงแค่ปลายนิ้วคลิก"] }
         ];
 
-        const navContainer = document.getElementById('tab-nav');
-        const contentContainer = document.getElementById('content-container');
-        const progressLine = document.getElementById('progress-line');
-        const satelliteIndicator = document.getElementById('satellite-indicator');
-        const progressDots = document.getElementById('progress-dots');
+        // Circular State Management
+        let currentWaypoint = -1;
+        let isPausedAtWaypoint = false;
+        let orbitProgress = -0.05; // Start slightly behind Week 1
+        let targetOrbitProgress = -0.05;
+        let travelSpeed = 0.005;
+        const totalWaypoints = timelineData.length;
 
-        // Function to render progress dots
-        function renderProgressDots() {
-            if(!progressDots) return;
-            timelineData.forEach((_, index) => {
-                const dot = document.createElement('div');
-                dot.id = `progress-dot-${index}`;
-                dot.className = `w-3 h-3 rounded-full transition-colors duration-500 z-0 ${index === 0 ? 'bg-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.8)]' : 'bg-gray-600'}`;
-                progressDots.appendChild(dot);
-            });
+        // --- THREE.JS SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Lighting
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.2); // Lowered so shadows and bump maps pop
+        scene.add(hemiLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); // Strong sun for sharp shadows
+        sunLight.position.set(50, 20, 30);
+        scene.add(sunLight);
+
+        // Starfield Background
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 0.1, transparent: true, opacity: 0.8 });
+        const starsVertices = [];
+        for (let i = 0; i < 5000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = -Math.random() * 2000;
+            starsVertices.push(x, y, z);
         }
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        const starField = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(starField);
 
-        // Function to render Tabs
-        function renderTabs() {
-            timelineData.forEach((data, index) => {
-                const btn = document.createElement('button');
-                btn.className = `timeline-btn w-full text-left px-5 py-4 flex items-center gap-4 shrink-0 md:shrink md:w-auto hover:bg-white/5 border-b md:border-b-0 ${index !== timelineData.length - 1 ? 'border-white/5' : 'border-transparent'}
-                                ${index === 0 ? 'active' : 'text-gray-400'}`;
-                btn.onclick = () => switchTab(index);
-                btn.id = `tab-btn-${index}`;
-                
-                btn.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-xs font-semibold tracking-wider ${index === 0 ? 'text-sky-400' : 'text-gray-500'} uppercase transition-colors" id="tab-label-${index}">Week ${data.week}</span>
-                        <span class="text-sm hidden md:block whitespace-nowrap truncate font-medium mt-1">${data.date}</span>
-                    </div>
-                `;
-                navContainer.appendChild(btn);
-            });
-        }
+        // Earth Setup
+        const earthRadius = 15;
+        const earthGroup = new THREE.Group();
+        scene.add(earthGroup);
 
-        // Function to render Content
-        function renderContent() {
-            timelineData.forEach((data, index) => {
-                const contentDiv = document.createElement('div');
-                contentDiv.id = `tab-content-${index}`;
-                contentDiv.className = `tab-content ${index === 0 ? 'active' : ''}`;
-                
-                let tasksHtml = data.tasks.map(task => `
-                    <li class="flex items-start gap-4 group">
-                        <div class="mt-1.5 w-2 h-2 rounded-full bg-sky-500/50 group-hover:bg-sky-400 group-hover:shadow-[0_0_12px_rgba(56,189,248,0.8)] transition-all duration-300 shrink-0 ring-4 ring-sky-500/10"></div>
-                        <p class="text-gray-300/90 text-sm md:text-base leading-relaxed group-hover:text-gray-200 transition-colors">${task}</p>
-                    </li>
-                `).join('');
+        // Loading Manager
+        const manager = new THREE.LoadingManager();
+        manager.onLoad = function () {
+            const loadingScreen = document.getElementById('loading-screen');
+            const introScreen = document.getElementById('intro-screen');
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.pointerEvents = 'none';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
 
-                contentDiv.innerHTML = `
-                    <div class="flex items-center gap-2 text-sky-400 mb-3 font-medium tracking-wide">
-                        <div class="bg-sky-500/10 px-3 py-1 rounded-full border border-sky-500/20 flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-days text-xs"></i> 
-                            <span class="text-xs uppercase font-bold tracking-widest">${data.date}</span>
-                        </div>
-                    </div>
-                    <h3 class="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-8 flex items-center gap-4 leading-tight">
-                        <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg backdrop-blur-sm shrink-0">
-                            <i class="fa-solid ${data.icon} text-2xl text-transparent bg-clip-text bg-gradient-to-br from-sky-400 to-indigo-400"></i>
-                        </div>
-                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">${data.title}</span>
-                    </h3>
+                // Show Intro Screen
+                introScreen.style.display = 'flex';
+                setTimeout(() => {
+                    introScreen.style.opacity = '1';
+                }, 50);
+            }, 1000);
+        };
+        manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+            document.getElementById('loading-text').innerText = `Loading Assets... ${Math.round((itemsLoaded / itemsTotal) * 100)}%`;
+        };
+        const textureLoader = new THREE.TextureLoader(manager);
+
+        // Ultra-High Resolution Earth Mesh
+        // Ultra-High Resolution Earth Mesh
+        // Increase segments drastically for 10K/21K textures to show topography better
+        const earthGeometry = new THREE.SphereGeometry(earthRadius, 128, 128);
+        const earthMaterial = new THREE.MeshPhongMaterial({
+            map: textureLoader.load('assets/earthButPictures/earth_color_8K.jpg'),
+            bumpMap: textureLoader.load('assets/earthButPictures/topography_8K.jpg'),
+            bumpScale: 1.5, // Increased significantly so mountains cast visible shadows
+            specularMap: textureLoader.load('assets/earthButPictures/earth_landocean_8K.jpg'),
+            specular: new THREE.Color(0x999999), // Brighter specular reflection for oceans
+            shininess: 60,
+            emissiveMap: textureLoader.load('assets/earthButPictures/earth_nightlights_8K.jpg'),
+            emissive: new THREE.Color(0xffffff),
+            emissiveIntensity: 0.8 // Brighter night lights
+        });
+
+        // Custom shader injection to make nightlights ONLY visible on the dark side of the earth
+        earthMaterial.onBeforeCompile = function (shader) {
+            shader.uniforms.sunDirection = { value: new THREE.Vector3(50, 20, 30).normalize() };
+            
+            shader.vertexShader = `
+                varying vec3 vEarthWorldNormal;
+            ` + shader.vertexShader;
+            
+            shader.vertexShader = shader.vertexShader.replace(
+                '#include <worldpos_vertex>',
+                `
+                #include <worldpos_vertex>
+                // Calculate world normal for day/night detection
+                vEarthWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+                `
+            );
+            
+            shader.fragmentShader = `
+                uniform vec3 sunDirection;
+                varying vec3 vEarthWorldNormal;
+            ` + shader.fragmentShader;
+            
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `
+                #ifdef USE_EMISSIVEMAP
+                    vec4 emissiveColor = texture2D( emissiveMap, vUv );
                     
-                    <div class="bg-black/20 rounded-2xl p-6 md:p-8 border border-white/5 mb-6 backdrop-blur-sm">
-                        <h4 class="text-xs font-bold text-sky-500/80 uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <i class="fa-solid fa-list-check"></i> Task & Operations
-                        </h4>
-                        <ul class="space-y-5">
-                            ${tasksHtml}
-                        </ul>
-                    </div>
-
-                    ${data.highlight ? `
-                        <div class="bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-500/20 rounded-2xl p-6 flex items-start gap-5 relative overflow-hidden group">
-                            <div class="absolute inset-0 bg-gradient-to-r from-sky-400/0 via-sky-400/5 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform"></div>
-                            <div class="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 mt-0.5">
-                                <i class="fa-solid fa-star text-amber-400 text-sm"></i>
-                            </div>
-                            <div class="relative z-10">
-                                <h4 class="text-sm font-bold text-sky-300 mb-2 uppercase tracking-wider">Key Takeaway</h4>
-                                <p class="text-sm md:text-base text-sky-100/90 leading-relaxed font-medium">${data.highlight}</p>
-                            </div>
-                        </div>
-                    ` : ''}
+                    // Calculate day/night mix (1.0 on night side, 0.0 on day side)
+                    float sunDot = dot(vEarthWorldNormal, sunDirection);
+                    // Fade out night lights smoothly across the terminator line
+                    float nightMix = smoothstep(0.2, -0.2, sunDot);
                     
-                    ${data.video ? `
-                        <div class="mt-8 bg-black/30 rounded-2xl p-5 border border-white/5 backdrop-blur-sm">
-                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-circle-play text-sky-500"></i> Video Demonstration
-                            </h4>
-                            <div class="rounded-xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] group relative">
-                                <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10 pointer-events-none z-10"></div>
-                                <video controls class="w-full h-auto max-h-[450px] object-cover bg-black" preload="metadata">
-                                    <source src="${data.video}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                        </div>
-                    ` : ''}
-                `;
-                contentContainer.appendChild(contentDiv);
-            });
+                    totalEmissiveRadiance *= emissiveColor.rgb * nightMix;
+                #endif
+                `
+            );
+        };
+
+        let earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        earthMesh.rotation.z = 23.5 * Math.PI / 180;
+        earthGroup.add(earthMesh);
+
+        // Clouds Layer (Restored to safe AdditiveBlending)
+        const cloudGeometry = new THREE.SphereGeometry(earthRadius * 1.01, 64, 64);
+        const cloudMaterial = new THREE.MeshPhongMaterial({
+            map: textureLoader.load('assets/earthButPictures/earth_clouds_8K.jpg'),
+            transparent: true,
+            opacity: 0.35,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        let cloudMesh = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        earthMesh.add(cloudMesh);
+
+        // Atmosphere glow (Perspective Correct BackSide Shader - TRULY Bulletproof)
+        const atmosphereGeometry = new THREE.SphereGeometry(earthRadius * 1.05, 64, 64);
+        const atmosphereMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                sunDirection: { value: new THREE.Vector3(50, 20, 30).normalize() }
+            },
+            vertexShader: `
+                varying vec3 vNormal;
+                varying vec3 vWorldNormal;
+                varying vec3 vViewPosition; // Added for perspective correction
+                void main() {
+                    vNormal = normalize(normalMatrix * normal);
+                    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    vViewPosition = -mvPosition.xyz; // Vector from vertex to camera
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 sunDirection;
+                varying vec3 vNormal;
+                varying vec3 vWorldNormal;
+                varying vec3 vViewPosition;
+                void main() {
+                    // Perspective correct view direction
+                    vec3 viewDir = normalize(vViewPosition);
+                    
+                    // For BackSide, normal points outwards, viewDir points towards camera.
+                    // dot product is negative. d goes from 0 (visual edge) to 1 (back center).
+                    // Because we use the actual perspective viewDir, d is EXACTLY 0.0 at the visual tangent!
+                    float d = -dot(vNormal, viewDir);
+                    
+                    float intensity = 0.0;
+                    
+                    // Earth limb is at d = 0.305 for a 1.05x sphere (independent of camera distance!)
+                    if (d < 0.305) {
+                        // Fade from 0 at the outer edge to 1 at the limb
+                        intensity = smoothstep(0.0, 0.305, d);
+                    } else {
+                        // Fade from 1 at the limb to 0 behind the earth
+                        intensity = smoothstep(1.0, 0.305, d);
+                    }
+                    
+                    // Sun lighting (Atmospheric scattering is complex. In reality, you see a bright ring 
+                    // from the dark side due to forward scattering. We simulate this by keeping a high ambient glow).
+                    float sunIntensity = max(0.0, dot(vWorldNormal, sunDirection));
+                    // 0.7 ambient means the aura is always at least 70% bright even on the pitch-black night side!
+                    float finalIntensity = intensity * (sunIntensity * 0.3 + 0.3);
+                    
+                    // Power curve
+                    finalIntensity = pow(finalIntensity, 1.5) * 2.5; // Boosted slightly for visibility
+                    
+                    gl_FragColor = vec4(0.2, 0.5, 1.0, 1.0) * finalIntensity;
+                }
+            `,
+            blending: THREE.AdditiveBlending,
+            side: THREE.BackSide, // Physically behind the earth
+            transparent: true,
+            depthWrite: false
+        });
+        const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+        earthGroup.add(atmosphere);
+
+        // Orbit Curve (Inclined ellipse)
+        const orbitRadiusX = 22;
+        const orbitRadiusY = 22;
+        const orbitCurve = new THREE.EllipseCurve(0, 0, orbitRadiusX, orbitRadiusY, 0, 2 * Math.PI, false, 0);
+
+        function get3DOrbitPosition(t) {
+            const pt2d = orbitCurve.getPoint(t % 1.0);
+            const inclination = 20 * Math.PI / 180;
+            const x = pt2d.x;
+            const y = pt2d.y * Math.cos(inclination);
+            const z = pt2d.y * Math.sin(inclination);
+            return new THREE.Vector3(x, y, z);
         }
 
-        // Function to handle switching tabs
-        function switchTab(activeIndex) {
-            // Update Progress Bar
-            if(progressLine && satelliteIndicator) {
-                const percentage = (activeIndex / (timelineData.length - 1)) * 100;
-                progressLine.style.width = `${percentage}%`;
-                satelliteIndicator.style.left = `${percentage}%`;
-                
-                // Update dots
-                timelineData.forEach((_, idx) => {
-                    const dot = document.getElementById(`progress-dot-${idx}`);
-                    if(dot) {
-                        if(idx <= activeIndex) {
-                            dot.className = 'w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.8)] transition-all duration-500 z-0 relative';
+        // Visualize Orbit Path
+        const pathPoints = [];
+        for (let i = 0; i <= 100; i++) {
+            pathPoints.push(get3DOrbitPosition(i / 100));
+        }
+        const pathGeometry = new THREE.BufferGeometry().setFromPoints(pathPoints);
+        const pathMaterial = new THREE.LineBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.25 });
+        const orbitLine = new THREE.Line(pathGeometry, pathMaterial);
+        scene.add(orbitLine);
+
+        // Waypoint Markers
+        const waypointMarkers = [];
+        const waypointGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const waypointMaterial = new THREE.MeshBasicMaterial({ color: 0x0ea5e9 });
+        for (let i = 0; i < totalWaypoints; i++) {
+            const wpProgress = i / totalWaypoints;
+            const pos = get3DOrbitPosition(wpProgress);
+            const marker = new THREE.Mesh(waypointGeometry, waypointMaterial);
+            marker.position.copy(pos);
+
+            const ringGeo = new THREE.RingGeometry(0.5, 0.6, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.copy(pos);
+
+            scene.add(marker);
+            scene.add(ring);
+            waypointMarkers.push({ marker, ring, progress: wpProgress });
+        }
+
+        // Build/Load Satellite Model (Dragon.obj from assets/satellite/)
+        const satelliteGroup = new THREE.Group();
+        scene.add(satelliteGroup);
+
+        if (window.THREE.OBJLoader) {
+            const objLoader = new THREE.OBJLoader(manager);
+
+            const dragonAlbedo = textureLoader.load('assets/satellite/Albedo.jpg');
+            const dragonNormal = textureLoader.load('assets/satellite/NormalMap.jpg');
+            const dragonRoughness = textureLoader.load('assets/satellite/roughness.jpg');
+            const dragonEmission = textureLoader.load('assets/satellite/emission.jpg');
+
+            // Let Three.js use default flipY for OBJ
+            // We just create a standard material
+            const dragonMaterial = new THREE.MeshStandardMaterial({
+                map: dragonAlbedo,
+                normalMap: dragonNormal,
+                roughnessMap: dragonRoughness,
+                emissiveMap: dragonEmission,
+                emissive: new THREE.Color(0xffffff),
+                emissiveIntensity: 0.1, // Lower intensity so it doesn't glow strangely
+                metalness: 0.7,
+                roughness: 0.3,
+                side: THREE.DoubleSide
+            });
+
+            // Create a procedural glowing grid texture for solar panels
+            const canvasT = document.createElement('canvas');
+            canvasT.width = 512; canvasT.height = 512;
+            const ctx = canvasT.getContext('2d');
+            ctx.fillStyle = '#050b14'; ctx.fillRect(0, 0, 512, 512); // dark blue background
+            ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 4; // glowing blue lines
+            for (let i = 0; i <= 512; i += 32) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
+            }
+            const panelTex = new THREE.CanvasTexture(canvasT);
+            panelTex.wrapS = THREE.RepeatWrapping; panelTex.wrapT = THREE.RepeatWrapping;
+            panelTex.repeat.set(6, 2);
+            const panelMaterial = new THREE.MeshStandardMaterial({
+                map: panelTex,
+                emissive: new THREE.Color(0x0ea5e9),
+                emissiveMap: panelTex,
+                emissiveIntensity: 0.4,
+                metalness: 0.9,
+                roughness: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            objLoader.load('assets/satellite/Dragon.obj', (obj) => {
+                obj.traverse((child) => {
+                    if (child.isMesh) {
+                        child.geometry.computeVertexNormals(); // Crucial for lighting!
+                        child.geometry.center(); // Fix origin issues
+
+                        // Detect if the mesh is a solar panel using bounding box aspect ratio
+                        child.geometry.computeBoundingBox();
+                        const size = child.geometry.boundingBox.getSize(new THREE.Vector3());
+                        // If it's very wide compared to its height and depth, it's likely a panel!
+                        const isPanel = (size.x > size.y * 3 && size.x > size.z * 1.5) ||
+                            (size.z > size.y * 3 && size.z > size.x * 1.5);
+
+                        if (isPanel) {
+                            child.material = panelMaterial; // Apply custom glowing grid
                         } else {
-                            dot.className = 'w-3 h-3 rounded-full bg-gray-600 transition-all duration-500 z-0 relative';
+                            child.material = dragonMaterial;
                         }
                     }
                 });
-            }
-
-            // Update Buttons
-            timelineData.forEach((_, index) => {
-                const btn = document.getElementById(`tab-btn-${index}`);
-                const label = document.getElementById(`tab-label-${index}`);
-                const content = document.getElementById(`tab-content-${index}`);
-                
-                if (index === activeIndex) {
-                    btn.classList.add('active');
-                    label.classList.add('text-sky-400');
-                    label.classList.remove('text-gray-500');
-                    
-                    // Add animation class
-                    content.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                    label.classList.remove('text-sky-400');
-                    label.classList.add('text-gray-500');
-                    
-                    content.classList.remove('active');
+                // Scale Dragon model appropriately
+                const box = new THREE.Box3().setFromObject(obj);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                let scaleFactor = 1.0;
+                if (maxDim > 0) {
+                    scaleFactor = 2.0 / maxDim; // Scale to ~2 units
+                    obj.scale.set(scaleFactor, scaleFactor, scaleFactor);
                 }
+
+                satelliteGroup.add(obj);
+            }, undefined, (err) => {
+                console.warn("OBJ Satellite load fallback:", err);
+                buildProceduralSatellite();
             });
-            
-            // Scroll selected button into view on mobile
-            const activeBtn = document.getElementById(`tab-btn-${activeIndex}`);
-            if(window.innerWidth < 768) {
-                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+            buildProceduralSatellite();
+        }
+
+        function buildProceduralSatellite() {
+            const bodyGeo = new THREE.BoxGeometry(0.8, 0.8, 1.2);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.7, roughness: 0.3 });
+            const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            satelliteGroup.add(bodyMesh);
+
+            const panelGeo = new THREE.BoxGeometry(3.0, 0.05, 1.2);
+            const panelMat = new THREE.MeshStandardMaterial({ color: 0x113366, metalness: 0.9, roughness: 0.1 });
+            const leftPanel = new THREE.Mesh(panelGeo, panelMat);
+            leftPanel.position.set(-1.9, 0, 0);
+            satelliteGroup.add(leftPanel);
+            const rightPanel = new THREE.Mesh(panelGeo, panelMat);
+            rightPanel.position.set(1.9, 0, 0);
+            satelliteGroup.add(rightPanel);
+        }
+
+        // --- LOGIC & UI INTERACTION ---
+
+        const uiOverlay = document.getElementById('content-overlay');
+        const dynamicContent = document.getElementById('dynamic-content');
+        const hudWaypoint = document.getElementById('hud-waypoint');
+        const btnContinue = document.getElementById('btn-continue');
+        const btnPrevious = document.getElementById('btn-previous');
+        const navDotsContainer = document.getElementById('nav-dots');
+
+        // Init Nav Dots
+        timelineData.forEach((data, index) => {
+            const dot = document.createElement('div');
+            dot.className = `nav-dot w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${index === 0 ? 'bg-sky-400 text-white shadow-[0_0_10px_rgba(14,165,233,0.8)] scale-110' : 'bg-gray-700/80 text-gray-400 hover:bg-gray-600'}`;
+            dot.innerText = data.week;
+            dot.onclick = () => flyToWaypoint(index);
+            navDotsContainer.appendChild(dot);
+        });
+
+        function updateNavDots(activeIndex) {
+            const dots = navDotsContainer.children;
+            for (let i = 0; i < dots.length; i++) {
+                if (i === activeIndex) {
+                    dots[i].className = 'nav-dot w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 bg-sky-400 text-white shadow-[0_0_10px_rgba(14,165,233,0.8)] scale-110';
+                } else {
+                    dots[i].className = 'nav-dot w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 bg-gray-700/80 text-gray-400 hover:bg-gray-600';
+                }
             }
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTabs();
-            renderContent();
-            renderProgressDots();
-            switchTab(0);
+        function renderWaypointContent(index) {
+            const data = timelineData[index];
+
+            let tasksHtml = data.tasks.map(task => `
+                <li class="flex items-start gap-3">
+                    <div class="mt-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(14,165,233,0.8)] shrink-0"></div>
+                    <p class="text-gray-200 text-sm md:text-base leading-relaxed">${task}</p>
+                </li>
+            `).join('');
+
+            dynamicContent.innerHTML = `
+                <div class="flex items-center gap-2 text-sky-400 mb-3 font-medium">
+                    <i class="fa-solid fa-calendar-days"></i> 
+                    <span class="tracking-wide text-sm">WEEK ${data.week} : ${data.date}</span>
+                </div>
+                <h3 class="text-3xl md:text-4xl font-bold text-white mb-8 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-sky-500/10 border border-sky-400/30 flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${data.icon} text-2xl text-sky-400"></i>
+                    </div>
+                    ${data.title}
+                </h3>
+                
+                <div class="bg-black/40 rounded-2xl p-6 border border-white/10 mb-6">
+                    <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Task & Operations</h4>
+                    <ul class="space-y-4">
+                        ${tasksHtml}
+                    </ul>
+                </div>
+
+                ${data.highlight ? `
+                    <div class="bg-gradient-to-r from-sky-900/40 to-indigo-900/40 border border-sky-400/30 rounded-xl p-5 flex items-start gap-4">
+                        <i class="fa-solid fa-star text-amber-400 mt-1"></i>
+                        <div>
+                            <h4 class="text-sm font-semibold text-sky-300 mb-1">Mission Highlight</h4>
+                            <p class="text-sm text-sky-100/90 leading-relaxed">${data.highlight}</p>
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${data.video ? `
+                    <div class="mt-6 bg-black/40 rounded-xl p-5 border border-white/10">
+                        <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-3 flex items-center gap-2"><i class="fa-solid fa-circle-play"></i> Video Demonstration</h4>
+                        <div class="rounded-lg overflow-hidden border border-white/10">
+                            <video controls class="w-full h-auto max-h-[400px] object-cover bg-black" preload="metadata">
+                                <source src="${data.video}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function triggerWaypoint(index) {
+            isPausedAtWaypoint = true;
+            hudWaypoint.innerText = `Orbit Stopped: Week ${index + 1}`;
+            hudWaypoint.classList.add('text-amber-400');
+
+            renderWaypointContent(index);
+            uiOverlay.classList.add('active');
+
+            waypointMarkers[index].ring.material.color.setHex(0xffd700);
+            waypointMarkers[index].ring.scale.set(1.5, 1.5, 1.5);
+
+            updateNavDots(index);
+        }
+
+        // STRICT CIRCULAR FORWARD ORBIT LOGIC
+        function flyToWaypoint(targetIndex) {
+            uiOverlay.classList.remove('active');
+
+            if (currentWaypoint >= 0) {
+                waypointMarkers[currentWaypoint].ring.material.color.setHex(0xffffff);
+                waypointMarkers[currentWaypoint].ring.scale.set(1, 1, 1);
+            }
+
+            if (targetIndex === currentWaypoint && isPausedAtWaypoint) {
+                triggerWaypoint(targetIndex);
+                return;
+            }
+
+            currentWaypoint = targetIndex;
+            let targetProgress = waypointMarkers[targetIndex].progress;
+
+            // Always move FORWARD in the circular orbit!
+            // If target progress is less than or equal to current orbitProgress,
+            // add 1.0 so the satellite travels forward past the wrap point to reach it.
+            let currentNormalized = orbitProgress % 1.0;
+            // Handle edge case: if we are behind 0 (e.g. -0.15 at launch)
+            if (orbitProgress < 0) currentNormalized = orbitProgress;
+
+            if (targetProgress <= currentNormalized && orbitProgress >= 0) {
+                targetOrbitProgress = Math.floor(orbitProgress) + 1.0 + targetProgress;
+            } else {
+                targetOrbitProgress = Math.floor(orbitProgress < 0 ? 0 : orbitProgress) + targetProgress;
+            }
+
+            // DYNAMIC SPEED: Calculate distance to target and set speed to reach it in exactly ~2 seconds
+            let distance = targetOrbitProgress - orbitProgress;
+            travelSpeed = Math.max(0.08, distance / 2.0);
+
+            hudWaypoint.innerText = `En Route to Week ${currentWaypoint + 1}...`;
+            hudWaypoint.classList.remove('text-amber-400');
+            isPausedAtWaypoint = false;
+
+            updateNavDots(currentWaypoint);
+        }
+
+        // Intro Button Logic
+        document.getElementById('btn-enter-orbit').addEventListener('click', () => {
+            const introScreen = document.getElementById('intro-screen');
+            introScreen.style.opacity = '0';
+            introScreen.style.pointerEvents = 'none';
+            setTimeout(() => {
+                introScreen.style.display = 'none';
+                flyToWaypoint(0); // Launch to Week 1!
+            }, 1000);
         });
+
+        btnContinue.addEventListener('click', () => {
+            const nextIdx = (currentWaypoint + 1) % totalWaypoints;
+            flyToWaypoint(nextIdx);
+        });
+
+        btnPrevious.addEventListener('click', () => {
+            const prevIdx = (currentWaypoint - 1 + totalWaypoints) % totalWaypoints;
+            flyToWaypoint(prevIdx);
+        });
+
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            // Rotate Earth and Clouds
+            earthGroup.rotation.y += 0.05 * delta;
+            cloudMesh.rotation.y += 0.01 * delta; // Clouds drift slightly faster than the earth
+
+            if (!isPausedAtWaypoint) {
+                // Use the dynamic travelSpeed instead of fixed 0.25
+                orbitProgress += travelSpeed * delta;
+
+                if (orbitProgress >= targetOrbitProgress) {
+                    orbitProgress = targetOrbitProgress;
+                    const normalizedProgress = orbitProgress % 1.0;
+                    triggerWaypoint(currentWaypoint);
+                }
+            }
+
+            // Calculate Satellite position & forward trajectory
+            // Ensure values are properly wrapped for negative progress (during launch)
+            const currentNorm = (orbitProgress % 1.0 + 1.0) % 1.0;
+            const currentPos = get3DOrbitPosition(currentNorm);
+            const lookAheadPos = get3DOrbitPosition((currentNorm + 0.01) % 1.0);
+
+            satelliteGroup.position.copy(currentPos);
+            satelliteGroup.lookAt(lookAheadPos);
+
+            // Third Person Camera Logic
+            const upVec = currentPos.clone().normalize();
+            const forwardVec = lookAheadPos.clone().sub(currentPos).normalize();
+
+            const backOffset = forwardVec.clone().multiplyScalar(-5);
+            const upOffset = upVec.clone().multiplyScalar(3);
+
+            const idealCameraPos = currentPos.clone().add(backOffset).add(upOffset);
+
+            camera.position.lerp(idealCameraPos, 0.1);
+
+            const targetLookAt = currentPos.clone().add(forwardVec.clone().multiplyScalar(2));
+            camera.lookAt(targetLookAt);
+
+            // Animate waypoint rings
+            waypointMarkers.forEach(wp => {
+                wp.ring.rotation.z += 1 * delta;
+                wp.ring.lookAt(camera.position);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start Loop
+        animate();
+
     </script>
 </body>
+
 </html>
