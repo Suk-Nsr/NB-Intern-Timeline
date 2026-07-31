@@ -178,9 +178,9 @@
                 <i class="fa-solid fa-satellite text-white text-3xl"></i>
             </div>
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">NBSPACE Internship</h1>
-            <p class="text-sky-300 text-lg mb-8 font-medium">Mission Progress Report & Timeline</p>
+            <p class="text-sky-300 text-lg mb-8 font-medium">Progress Report & Timeline</p>
 
-            <div class="bg-black/40 rounded-xl p-6 mb-10 text-left border border-white/10">
+            <!-- <div class="bg-black/40 rounded-xl p-6 mb-10 text-left border border-white/10">
                 <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2"><i
                         class="fa-solid fa-circle-info mr-2"></i>Mission Briefing</h3>
                 <p class="text-gray-300 text-sm leading-relaxed">
@@ -188,16 +188,16 @@
                     คุณกำลังจะเข้าสู่วงโคจรเพื่อติดตามผลการปฏิบัติงานในแต่ละสัปดาห์
                     ระบบจะนำพาดาวเทียมของคุณบินไปตามจุด Waypoint ต่างๆ รอบโลก เพื่อแสดงภารกิจที่สำเร็จแล้ว
                 </p>
-            </div>
+            </div> -->
 
             <button id="btn-enter-orbit"
                 class="group relative px-10 py-4 bg-sky-500 hover:bg-sky-400 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(14,165,233,0.6)] hover:shadow-[0_0_40px_rgba(14,165,233,0.8)] flex items-center justify-center mx-auto gap-3 overflow-hidden">
                 <div
                     class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                 </div>
-                <span class="relative z-10">Initiate Orbit Sequence</span>
-                <i
-                    class="fa-solid fa-rocket relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                <span class="relative z-10">START</span>
+                <!-- <i
+                    class="fa-solid fa-rocket relative z-10 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i> -->
             </button>
 
             <div class="mt-8 flex justify-center gap-4">
@@ -228,8 +228,8 @@
                     <i class="fa-solid fa-satellite text-white text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white drop-shadow-lg">NBSPACE FlatSat Labs</h1>
-                    <p class="text-sm text-sky-200 font-medium mb-2">Mission Timeline (25 พ.ค. - 24 ก.ค.)</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white drop-shadow-lg">NBSPACE Internship</h1>
+                    <p class="text-sm text-sky-200 font-medium mb-2">Timeline (25 พ.ค. - 24 ก.ค.)</p>
                     <div class="flex gap-2 pointer-events-auto">
                         <a href="https://github.com/Suk-Nsr/FlatSat-Labs" target="_blank" title="GitHub Repository"
                             class="text-xs bg-black/40 hover:bg-black/60 border border-white/10 text-white py-1 px-3 rounded-full flex items-center gap-2 transition-colors">
@@ -345,7 +345,7 @@
         for (let i = 0; i < 5000; i++) {
             const x = (Math.random() - 0.5) * 8000; // Pushed stars further back
             const y = (Math.random() - 0.5) * 8000;
-            const z = -Math.random() * 8000;
+            const z = (Math.random() - 0.5) * 8000; // Distribute stars on all sides
             starsVertices.push(x, y, z);
         }
         starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
@@ -574,15 +574,9 @@
 
             // Let Three.js use default flipY for OBJ
             // We just create a standard material
-            const dragonMaterial = new THREE.MeshStandardMaterial({
+            const dragonMaterial = new THREE.MeshBasicMaterial({
                 map: dragonAlbedo,
-                normalMap: dragonNormal,
-                roughnessMap: dragonRoughness,
-                emissiveMap: dragonEmission,
-                emissive: new THREE.Color(0xffffff),
-                emissiveIntensity: 0.1, // Lower intensity so it doesn't glow strangely
-                metalness: 0.7,
-                roughness: 0.3,
+                color: 0xffffff,
                 side: THREE.DoubleSide
             });
 
@@ -641,7 +635,7 @@
                 const maxDim = Math.max(size.x, size.y, size.z);
                 let scaleFactor = 1.0;
                 if (maxDim > 0) {
-                    scaleFactor = 2.0 / maxDim; // Scale to ~2 units
+                    scaleFactor = 3.0 / maxDim; // Scale to ~2 units
                     obj.scale.set(scaleFactor, scaleFactor, scaleFactor);
                 }
 
@@ -656,12 +650,12 @@
 
         function buildProceduralSatellite() {
             const bodyGeo = new THREE.BoxGeometry(0.8, 0.8, 1.2);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.7, roughness: 0.3 });
+            const bodyMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
             const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
             satelliteGroup.add(bodyMesh);
 
             const panelGeo = new THREE.BoxGeometry(3.0, 0.05, 1.2);
-            const panelMat = new THREE.MeshStandardMaterial({ color: 0x113366, metalness: 0.9, roughness: 0.1 });
+            const panelMat = new THREE.MeshBasicMaterial({ color: 0x113366 });
             const leftPanel = new THREE.Mesh(panelGeo, panelMat);
             leftPanel.position.set(-1.9, 0, 0);
             satelliteGroup.add(leftPanel);
@@ -728,15 +722,7 @@
                     </ul>
                 </div>
 
-                ${data.highlight ? `
-                    <div class="bg-gradient-to-r from-sky-900/40 to-indigo-900/40 border border-sky-400/30 rounded-xl p-5 flex items-start gap-4">
-                        <i class="fa-solid fa-star text-amber-400 mt-1"></i>
-                        <div>
-                            <h4 class="text-sm font-semibold text-sky-300 mb-1">Mission Highlight</h4>
-                            <p class="text-sm text-sky-100/90 leading-relaxed">${data.highlight}</p>
-                        </div>
-                    </div>
-                ` : ''}
+
 
                 ${data.video ? `
                     <div class="mt-6 bg-black/40 rounded-xl p-5 border border-white/10">
@@ -798,7 +784,7 @@
 
             // DYNAMIC SPEED: Calculate distance to target and set speed to reach it in exactly ~3 seconds
             let distance = targetOrbitProgress - orbitProgress;
-            travelSpeed = Math.max(0.03, distance / 3.0);
+            travelSpeed = Math.max(0.03, distance / 1.0);
 
             hudWaypoint.innerText = `En Route to Week ${currentWaypoint + 1}...`;
             hudWaypoint.classList.remove('text-amber-400');
