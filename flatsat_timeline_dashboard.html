@@ -295,7 +295,7 @@
             { week: 6, date: "29 มิ.ย. - 3 ก.ค.", title: "Server Infrastructure (Ad-hoc Task)", icon: "fa-server", highlight: "แสดงศักยภาพนอกเหนือจากงานหลักด้านโค้ดดิ้ง สู่การจัดการระดับ Infrastructure", tasks: ["<b>รับงานมอบหมายพิเศษ:</b> เมื่อตัวหลักสูตร FlatSat เริ่มเสร็จสมบูรณ์และนิ่งแล้ว ได้รับมอบหมายงานทางวิศวกรรมเพิ่มเติม", "<b>ตั้งค่าระบบเครือข่าย:</b> ดำเนินการติดตั้งและตั้งค่า Debian Server ให้กับทีมเพื่อใช้เป็นโครงสร้างพื้นฐานในการพัฒนางานอื่นๆ ต่อไป"] },
             { week: 7, date: "6 ก.ค. - 10 ก.ค.", title: "Internationalization", icon: "fa-language", highlight: "ทักษะด้านการสื่อสารและการแปลเอกสารวิชาการทางวิศวกรรม", tasks: ["<b>ยกระดับผลิตภัณฑ์สู่สากล:</b> ต้อนรับคณะตัวแทนจากฟิลิปปินส์ที่เข้ามาเยี่ยมชมและศึกษาผลิตภัณฑ์ FlatSat Learning Kit", "<b>แปลเอกสาร (Translation):</b> ดำเนินการแปลเอกสารคู่มือปฏิบัติการทั้งหมดให้เป็นเวอร์ชันภาษาอังกฤษ เพื่อเตรียมรองรับกลุ่มผู้ใช้งานระดับนานาชาติ"] },
             { week: 8, date: "13 ก.ค. - 17 ก.ค.", title: "Advanced Hardware Integration", icon: "fa-microchip", video: "eMMC_Testing.mp4", highlight: "การเรียนรู้และรับมือกับสถาปัตยกรรมไมโครคอนโทรลเลอร์รุ่นใหม่ที่ซับซ้อนขึ้น", tasks: ["<b>ทดสอบฮาร์ดแวร์ใหม่:</b> ได้รับมอบหมายพิเศษให้ทำการทดสอบและเขียนโปรแกรมบนบอร์ดประมวลผลประสิทธิภาพสูง (STM32H723ZGT6U)", "<b>การเชื่อมต่อ eMMC:</b> ศึกษาและพัฒนาโค้ดจนสามารถอ่านและเขียนไฟล์ข้อมูลขนาดใหญ่ลงในหน่วยความจำชิป eMMC ได้สำเร็จตามความคาดหมาย"] },
-            { week: 9, date: "20 ก.ค. - 24 ก.ค.", title: "FlatSat Desktop UI Development", icon: "fa-desktop", highlight: "ก้าวเข้าสู่การพัฒนา Application ฝั่งผู้ใช้งาน (Frontend/Desktop App)", tasks: ["<b>ต่อยอดการใช้งาน (UX/UI):</b> ได้รับโปรเจกต์มอบหมายใหม่ในการพัฒนาซอฟต์แวร์ควบคุมการบินและแสดงผลข้อมูลสำหรับ FlatSat", "<b>FlatSat Desktop:</b> เริ่มต้นพัฒนาระบบ Dashboard ที่มี GUI สวยงาม เพื่อให้ผู้ใช้งานสามารถสั่งการและรับชม Telemetry ของดาวเทียมได้ง่ายๆ เพียงแค่ปลายนิ้วคลิก"] }
+            { week: 9, date: "20 ก.ค. - 24 ก.ค.", title: "FlatSat Desktop UI Development", icon: "fa-desktop", video: "Flatsat_Desktop_Testing.mp4", links: [{ title: "Software Manual", url: "FlatSat_Mission_Control_Software_Manual.pdf", icon: "fa-solid fa-file-pdf", classes: "bg-rose-500/20 hover:bg-rose-500/40 border border-rose-400/30 text-rose-100" }, { title: "GitHub Repo", url: "https://github.com/KittiphongDev/flatsat-desktop", icon: "fa-brands fa-github", classes: "bg-gray-700/50 hover:bg-gray-600/80 border border-gray-500/50 text-gray-100" }], highlight: "ก้าวเข้าสู่การพัฒนา Application ฝั่งผู้ใช้งาน (Frontend/Desktop App)", tasks: ["<b>ต่อยอดการใช้งาน (UX/UI):</b> ได้รับโปรเจกต์มอบหมายใหม่ในการพัฒนาซอฟต์แวร์ควบคุมการบินและแสดงผลข้อมูลสำหรับ FlatSat", "<b>FlatSat Desktop:</b> เริ่มต้นพัฒนาระบบ Dashboard ที่มี GUI สวยงาม เพื่อให้ผู้ใช้งานสามารถสั่งการและรับชม Telemetry ของดาวเทียมได้ง่ายๆ เพียงแค่ปลายนิ้วคลิก"] }
         ];
 
         // Circular State Management
@@ -722,7 +722,15 @@
                     </ul>
                 </div>
 
-
+                ${data.links ? `
+                    <div class="flex flex-wrap gap-3 mb-6">
+                        ${data.links.map(link => `
+                            <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg ${link.classes}">
+                                <i class="${link.icon} text-lg"></i> ${link.title}
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : ''}
 
                 ${data.video ? `
                     <div class="mt-6 bg-black/40 rounded-xl p-5 border border-white/10">
